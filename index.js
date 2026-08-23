@@ -3,7 +3,7 @@ const qrcodeTerminal = require('qrcode-terminal');
 const qrcodeImage = require('qrcode');
 const express = require('express');
 
-// Configurar servidor web Express para mostrar el QR en una URL
+// Configurar servidor web Express para mostrar el QR en una URL con formato SVG
 const app = express();
 const PORT = process.env.PORT || 8080;
 
@@ -11,16 +11,25 @@ let latestQR = '';
 
 app.get('/', (req, res) => {
     if (!latestQR) {
-        return res.send('<h2>El bot todavía no ha generado un código QR o ya está conectado. Actualiza en unos segundos.</h2>');
-    }
-    // Muestra el QR como imagen directamente en el navegador
-    qrcodeImage.toDataURL(latestQR, (err, src) => {
-        if (err) res.send('Error al generar la imagen del QR');
-        res.send(`
+        return res.send(`
+            <meta http-equiv="refresh" content="3">
             <div style="text-align: center; margin-top: 50px; font-family: Arial;">
-                <h2>Escanea este código QR para conectar el Bot de Airecoglobal</h2>
-                <img src="${src}" alt="WhatsApp QR Code" style="width: 300px; height: 300px;" />
-                <p>La página se actualizará automáticamente si hay cambios.</p>
+                <h2>⏳ El bot está iniciando o ya está conectado.</h2>
+                <p>Actualizando automáticamente en unos segundos...</p>
+            </div>
+        `);
+    }
+
+    // Generar código QR en formato SVG (garantiza que sea perfectamente válido y escaneable)
+    qrcodeImage.toString(latestQR, { type: 'svg', width: 300 }, (err, svg) => {
+        if (err) return res.send('Error al generar el código QR');
+        res.send(`
+            <div style="text-align: center; margin-top: 40px; font-family: Arial;">
+                <h2>📱 Escanea este código QR con WhatsApp</h2>
+                <div style="margin: 20px auto; display: inline-block; padding: 15px; background: white; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                    ${svg}
+                </div>
+                <p style="color: #666;">Este código se actualiza automáticamente cada 10 segundos.</p>
             </div>
             <script>setTimeout(() => window.location.reload(), 10000);</script>
         `);
