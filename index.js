@@ -1,11 +1,11 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 
-// Inicialización del cliente con configuración para Linux (Railway)
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
         headless: true,
+        executablePath: process.env.CHROME_BIN || undefined,
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
