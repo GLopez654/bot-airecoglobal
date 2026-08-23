@@ -13,7 +13,6 @@ nixPkgs = [
   "pango",
   "cairo",
   "alsa-lib",
-  "atkmm",
   "gtk3",
   "desktop-file-utils",
   "gdk-pixbuf",
