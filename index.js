@@ -1,11 +1,41 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
-const qrcode = require('qrcode-terminal');
+const qrcodeTerminal = require('qrcode-terminal');
+const qrcodeImage = require('qrcode');
+const express = require('express');
 
+// Configurar servidor web Express para mostrar el QR en una URL
+const app = express();
+const PORT = process.env.PORT || 8080;
+
+let latestQR = '';
+
+app.get('/', (req, res) => {
+    if (!latestQR) {
+        return res.send('<h2>El bot todavía no ha generado un código QR o ya está conectado. Actualiza en unos segundos.</h2>');
+    }
+    // Muestra el QR como imagen directamente en el navegador
+    qrcodeImage.toDataURL(latestQR, (err, src) => {
+        if (err) res.send('Error al generar la imagen del QR');
+        res.send(`
+            <div style="text-align: center; margin-top: 50px; font-family: Arial;">
+                <h2>Escanea este código QR para conectar el Bot de Airecoglobal</h2>
+                <img src="${src}" alt="WhatsApp QR Code" style="width: 300px; height: 300px;" />
+                <p>La página se actualizará automáticamente si hay cambios.</p>
+            </div>
+            <script>setTimeout(() => window.location.reload(), 10000);</script>
+        `);
+    });
+});
+
+app.listen(PORT, () => {
+    console.log(`Servidor web escuchando en el puerto ${PORT}`);
+});
+
+// Inicialización del cliente con configuración para Linux (Railway)
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
         headless: true,
-        executablePath: process.env.CHROME_BIN || undefined,
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -21,13 +51,20 @@ const client = new Client({
 // Estructura para almacenar el estado de cada usuario (Menú interactivo)
 const userSessions = {};
 
-// 1. Mostrar código QR en la consola para conectar WhatsApp
+// 1. Mostrar código QR en la consola y guardarlo para la web
 client.on('qr', (qr) => {
-    console.log('Escanea este código QR con tu WhatsApp:');
-    qrcode.generate(qr, { small: true });
+    latestQR = qr;
+    console.log('Escanea este código QR con tu WhatsApp o entra a tu URL pública /');
+    qrcodeTerminal.generate(qr, { small: true });
+    
+    // Guarda también como archivo local opcional
+    qrcodeImage.toFile('./qr.png', qr, (err) => {
+        if (!err) console.log('Imagen del QR guardada como qr.png');
+    });
 });
 
 client.on('ready', () => {
+    latestQR = ''; // Limpiar QR al conectar
     console.log('🤖 Bot de Airecoglobal listo y conectado.');
 });
 
