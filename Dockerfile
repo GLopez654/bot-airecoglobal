@@ -1,6 +1,5 @@
 FROM node:18-slim
 
-# Instalar dependencias necesarias para Chrome/Puppeteer en Debian/Linux
 RUN apt-get update && apt-get install -y \
     wget \
     gnupg \
@@ -38,6 +37,7 @@ RUN apt-get update && apt-get install -y \
     fonts-liberation \
     libappindicator3-1 \
     xdg-utils \
+    libasound2 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
